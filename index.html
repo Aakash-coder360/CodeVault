@@ -22,8 +22,15 @@
             border: 1px solid #30363d;
             border-radius: 10px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            margin: 20px;
         }
-        h1 { color: #58a6ff; margin-top: 0; }
+        h1 { 
+            color: #58a6ff; 
+            margin-top: 0; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
         .status-badge {
             display: inline-block;
             background-color: #238636;
@@ -34,17 +41,14 @@
             font-weight: bold;
             margin-bottom: 20px;
         }
-        .status-badge::before { content: "● "; }
-        .terminal {
-            background-color: #010409;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: 'Courier New', Courier, monospace;
-            border: 1px solid #30363d;
-            margin-top: 20px;
-            color: #7ee787;
+        .status-badge::before { 
+            content: "● "; 
+            animation: blink 1.5s infinite; 
         }
-        .terminal span { color: #8b949e; }
+        @keyframes blink { 
+            50% { opacity: 0; } 
+        }
+        
         .features {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -57,12 +61,76 @@
             border-radius: 6px;
             border-left: 4px solid #58a6ff;
         }
+        
+        .terminal {
+            background-color: #010409;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', Courier, monospace;
+            border: 1px solid #30363d;
+            margin-top: 15px;
+            color: #7ee787;
+            position: relative;
+            padding-right: 80px; /* Space for copy button */
+        }
+        .terminal span { color: #8b949e; }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #30363d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+        .copy-btn:hover { background: #58a6ff; }
+        
+        .test-btn {
+            background-color: #238636;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 25px;
+            width: 100%;
+            transition: 0.3s;
+        }
+        .test-btn:hover { background-color: #2ea043; }
+        
+        #live-time { 
+            color: #8b949e; 
+            font-size: 14px; 
+            margin-top: -10px; 
+            margin-bottom: 20px;
+        }
+        
+        #pipeline-output {
+            display: none;
+            background: #010409;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #7ee787;
+            border: 1px solid #30363d;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🛡️ CodeVault</h1>
         <div class="status-badge">CI/CD Pipeline Active</div>
+        <div id="live-time">Loading system time...</div>
+        
         <p>A professional Git-based source code management and automated deployment system. Push your code, and we handle the rest.</p>
         
         <div class="features">
@@ -77,7 +145,8 @@
         </div>
 
         <h3 style="margin-top: 30px;">Quick Start Guide</h3>
-        <div class="terminal">
+        <div class="terminal" id="command-text">
+            <button class="copy-btn" onclick="copyCommand()">Copy</button>
             <span>$</span> git init<br>
             <span>$</span> git add .<br>
             <span>$</span> git commit -m "Initial commit"<br>
@@ -85,6 +154,73 @@
             <br>
             <span># Once pushed, GitHub Actions automatically deploys the site.</span>
         </div>
+
+        <button class="test-btn" onclick="runPipelineTest()">▶ Run Live Pipeline Test</button>
+        <div id="pipeline-output"></div>
     </div>
+
+    <script>
+        // 1. Live Date and Time update
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('live-time').innerText = "🟢 System Online | Last check: " + now.toLocaleString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // 2. Copy Command Function
+        function copyCommand() {
+            const command = 'git init\ngit add .\ngit commit -m "Initial commit"\ngit push origin main';
+            navigator.clipboard.writeText(command).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.innerText = "Copied!";
+                btn.style.background = "#238636";
+                setTimeout(() => {
+                    btn.innerText = "Copy";
+                    btn.style.background = "#30363d";
+                }, 2000);
+            }).catch(err => {
+                alert("Failed to copy. Please copy manually.");
+            });
+        }
+
+        // 3. Fake Pipeline Test Animation
+        function runPipelineTest() {
+            const output = document.getElementById('pipeline-output');
+            const btn = document.querySelector('.test-btn');
+            
+            // Reset and show output
+            output.style.display = 'block';
+            output.innerHTML = '<span style="color:#8b949e;">Initializing pipeline...</span><br>';
+            btn.disabled = true;
+            btn.innerText = "⏳ Pipeline Running...";
+            btn.style.opacity = "0.7";
+
+            const steps = [
+                "✔️ Checking out repository...",
+                "✔️ Validating HTML and CSS syntax...",
+                "✔️ Running security checks...",
+                "✔️ Building assets...",
+                "🚀 Deployment successful! Site is live."
+            ];
+
+            let i = 0;
+            function showStep() {
+                if (i < steps.length) {
+                    output.innerHTML += steps[i] + "<br>";
+                    i++;
+                    setTimeout(showStep, 800); // 0.8 second delay per step
+                } else {
+                    // Reset button after completion
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerText = "▶ Run Live Pipeline Test";
+                        btn.style.opacity = "1";
+                    }, 2000);
+                }
+            }
+            showStep();
+        }
+    </script>
 </body>
 </html>
